@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns="http://tizen.org/ns/packages" package="org.tizen.app-selector" version="@APP_SELECTOR_VERSION@" install-location="internal-only">
+	<label>Application Selection Popup</label>
+	<author email="sewook7.park@samsung.com" href="www.samsung.com">Sewook Park</author>
+	<description>Application Selection Popup</description>
+	<ui-application appid="org.tizen.app-selector" exec="/usr/apps/org.tizen.app-selector-wearable/bin/app-selector" nodisplay="true" multiple="false" type="capp" taskmanage="false">
+		<label>Application Selection Popup</label>
+	</ui-application>
+</manifest>

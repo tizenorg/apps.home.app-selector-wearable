@@ -1,0 +1,78 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+PROJECT(app-selector C)
+
+SET(SRCS app-selector.c app-selector-view.c app-selector-util.c)
+
+SET(PACKAGE ${PROJECT_NAME})
+SET(PKGNAME "org.tizen.${PACKAGE}-wearable")
+SET(PREFIX ${CMAKE_INSTALL_PREFIX})
+SET(BINDIR "${PREFIX}/apps/${PKGNAME}/bin")
+SET(DATADIR "${PREFIX}/apps/${PKGNAME}/data")
+SET(RESDIR "${PREFIX}/apps/${PKGNAME}/res")
+SET(LOCALEDIR "${RESDIR}/locale")
+SET(ICONDIR "${DATADIR}/icons")
+SET(EDJDIR "${RESDIR}/edje/")
+
+
+IF("${CMAKE_BUILD_TYPE}" STREQUAL "")
+	SET(CMAKE_BUILD_TYPE "Release")
+ENDIF("${CMAKE_BUILD_TYPE}" STREQUAL "")
+MESSAGE("Build type: ${CMAKE_BUILD_TYPE}")
+
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
+
+INCLUDE(FindPkgConfig)
+pkg_check_modules(pkgs REQUIRED appcore-efl aul utilX ecore-x eina evas ecore ecore-file ecore-input edje appsvc x11 efl-assist vconf pkgmgr-info)
+
+FOREACH(flag ${pkgs_CFLAGS})
+	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
+ENDFOREACH(flag)
+
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS} -fPIC -fvisibility=hidden -Wall")
+SET(CMAKE_C_FLAGS_DEBUG "-O0 -g")
+SET(CMAKE_C_FLAGS_RELEASE "-O2")
+
+FIND_PROGRAM(UNAME NAMES uname)
+EXEC_PROGRAM("${UNAME}" ARGS "-m" OUTPUT_VARIABLE "ARCH")
+IF("${ARCH}" MATCHES "^arm.*")
+	ADD_DEFINITIONS("-DTARGET")
+	MESSAGE("add -DTARGET")
+ENDIF("${ARCH}" MATCHES "^arm.*")
+
+ADD_DEFINITIONS("-fpie")
+
+ADD_DEFINITIONS("-DVENDOR=\"${VENDOR}\"")
+ADD_DEFINITIONS("-DPACKAGE=\"${PACKAGE}\"")
+ADD_DEFINITIONS("-DPACKAGE_NAME=\"${PKGNAME}\"")
+ADD_DEFINITIONS("-DPREFIX=\"${PREFIX}\"")
+ADD_DEFINITIONS("-DLOCALEDIR=\"${LOCALEDIR}\"")
+ADD_DEFINITIONS("-DEDJ_NAME=\"${EDJDIR}/app-selector.edj\"")
+
+ADD_DEFINITIONS("-DENABLE_EFL_LANG_CHANGE")
+ADD_DEFINITIONS("-DEND_POPUP_AFTER_LAUNCH_RUNNING_APP")
+
+SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--as-needed")
+
+ADD_EXECUTABLE(${PROJECT_NAME} ${SRCS})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${pkgs_LDFLAGS} "-pie")
+
+ADD_CUSTOM_TARGET(app-selector.edj
+		COMMAND edje_cc -id ${CMAKE_SOURCE_DIR}/data/images -sd ${CMAKE_SOURCE_DIR}/data/sounds
+		${CMAKE_SOURCE_DIR}/data/app-selector.edc ${CMAKE_BINARY_DIR}/app-selector.edj
+		DEPENDS ${CMAKE_SOURCE_DIR}/data/app-selector.edc
+)
+ADD_DEPENDENCIES(${PROJECT_NAME} app-selector.edj)
+
+INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${BINDIR})
+INSTALL(FILES ${CMAKE_BINARY_DIR}/app-selector.edj DESTINATION ${EDJDIR})
+
+# install manifest file & icon
+CONFIGURE_FILE(${PKGNAME}.xml.in ${CMAKE_BINARY_DIR}/${PKGNAME}.xml)
+INSTALL(FILES ${CMAKE_BINARY_DIR}/${PKGNAME}.xml DESTINATION /usr/share/packages)
+
+# install smack rule
+INSTALL(FILES ${CMAKE_SOURCE_DIR}/org.tizen.app-selector-wearable.efl DESTINATION /etc/smack/accesses.d)
+
+# i18n
+#ADD_SUBDIRECTORY(po)
+

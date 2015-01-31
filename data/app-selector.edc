@@ -1,0 +1,3 @@
+collections {
+#include "groups/popup_custom.edc"
+}
