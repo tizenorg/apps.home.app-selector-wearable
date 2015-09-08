@@ -1,0 +1,11 @@
+<manifest>
+	<define>
+		<domain name="org.tizen.app-selector" />
+	</define>
+	<request>
+		<domain name="org.tizen.app-selector" />
+	</request>
+	<assign>
+		<filesystem path="/usr/apps/org.tizen.app-selector/bin/app-selector" exec_label="org.tizen.app-selector" />
+	</assign>
+</manifest>
